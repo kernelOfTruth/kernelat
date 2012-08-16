@@ -92,14 +92,14 @@ int main(int argc, char **argv)
 	}
 
 	// starts dummy IO workers if needed
-	pthread_t dummy_io_id[dummy_io_workers];
+	pthread_t dummy_io_worker_id[dummy_io_workers];
 	if (0 < dummy_io_workers)
 	{
 		dummy_io_worker_stop = 0;
 		pthread_mutex_init(&dummy_io_worker_mutex, NULL);
 		unsigned int i;
 		for (i = 0; i < dummy_io_workers; i++)
-			pthread_create(&dummy_io_id[i], NULL, dummy_io_worker, NULL);
+			pthread_create(&dummy_io_worker_id[i], NULL, dummy_io_worker, NULL);
 	}
 
 	// cycle to repeat spawn to get average spawn time
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
 
 		unsigned int i = 0;
 		for (i = 0; i < dummy_io_workers; i++)
-			pthread_join(dummy_io_id[i], NULL);
+			pthread_join(dummy_io_worker_id[i], NULL);
 		pthread_mutex_destroy(&dummy_io_worker_mutex);
 	}
 
