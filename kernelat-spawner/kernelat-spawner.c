@@ -43,7 +43,7 @@ static void *dummy_io_worker(void *nothing)
 {
 	FILE *zero = fopen("/dev/zero", "rb");
 	FILE *null = fopen("/dev/null", "w");
-	char *buffer = malloc(16384 * sizeof(char));
+	char *buffer = malloc(block_size * sizeof(char));
 
 	while (1)
 	{
