@@ -22,10 +22,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <openssl/sha.h>
+#include <math.h>
+#include <string.h>
+#include <sys/stat.h>
 
 // common vars used by workers
-unsigned int dummy_io_worker_stop, block_size = 4096;
-pthread_mutex_t dummy_io_worker_mutex;
+unsigned int dummy_io_worker_stop, write_worker_stop, block_size = 4096;
+pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex;
 
 // worker that spawns child to get spawn time
 static void *spawner_worker(void *nothing)
@@ -66,13 +70,85 @@ static void *dummy_io_worker(void *nothing)
 	}
 }
 
+// writes to file
+static void *write_worker(void *nothing)
+{
+	char filename[44];
+	struct stat sts;
+	do
+	{
+		struct timeval current_time;
+		gettimeofday(&current_time, NULL);
+		srandom(current_time.tv_sec + current_time.tv_usec);
+
+		// never ask me why I did so
+		unsigned int secs_length = (int)round(log10(pow(2, 8 * sizeof(time_t)))) + 1;
+		unsigned int usecs_length = (int)round(log10(pow(2, 8 * sizeof(suseconds_t)))) + 1;
+		unsigned int salt_length = (int)round(log10(pow(2, 8 * sizeof(long int)))) + 1;
+		char *secs = malloc(secs_length * sizeof(char));
+		char *usecs = malloc(usecs_length * sizeof(char));
+		char *salt = malloc(salt_length * sizeof(char));
+		sprintf(secs, "%d", current_time.tv_sec);
+		sprintf(usecs, "%d", current_time.tv_usec);
+		sprintf(salt, "%ld", random());
+		
+		unsigned int name_length = secs_length + usecs_length + salt_length;
+		char *name_1 = malloc(name_length * sizeof(char));
+		strcat(name_1, secs);
+		strcat(name_1, usecs);
+		strcat(name_1, salt);
+		free(secs);
+		free(usecs);
+		free(salt);
+
+		unsigned char digest[20];
+		SHA1(name_1, name_length, digest);
+		free(name_1);
+		
+		unsigned int i;
+		for (i = 0; i < 20; i++)
+		{
+			char *current = malloc(2 * sizeof(char));
+			sprintf(current, "%02x", digest[i]);
+			strcat(filename, current);
+			free(current);
+		}
+		strcat(filename, ".out");
+	} while (stat(filename, &sts) != -1);
+
+	FILE *zero = fopen("/dev/zero", "rb");
+	FILE *f = fopen(filename, "w");
+	char *buffer = malloc(block_size * sizeof(char));
+
+	while (1)
+	{
+		// checks exit condition
+		pthread_mutex_lock(&write_worker_mutex);
+		if (1 == write_worker_stop)
+		{
+			// exits gracefully
+			pthread_mutex_unlock(&write_worker_mutex);
+			free(buffer);
+			fclose(zero);
+			fclose(f);
+			remove(filename);
+			pthread_exit(NULL);
+		} else
+			pthread_mutex_unlock(&write_worker_mutex);
+
+		// reads block from /dev/zero and writes it to file
+		fread(buffer, block_size, 1, zero);
+		fwrite(buffer, block_size, 1, f);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int opt = 0;
-	unsigned int spawner_threads = 1, tries = 10, dummy_io_workers = 0;
+	unsigned int spawner_threads = 1, tries = 10, dummy_io_workers = 0, write_workers = 0;
 
 	// parses command line arguments
-	while (-1 != (opt = getopt(argc, argv, "c:t:d:b:")))
+	while (-1 != (opt = getopt(argc, argv, "c:t:d:b:w:")))
 	{
 		switch (opt)
 		{
@@ -88,6 +164,9 @@ int main(int argc, char **argv)
 			case 'b':
 				block_size = atoi(optarg);
 				break;
+			case 'w':
+				write_workers = atoi(optarg);
+				break;
 		}
 	}
 
@@ -100,6 +179,17 @@ int main(int argc, char **argv)
 		unsigned int i;
 		for (i = 0; i < dummy_io_workers; i++)
 			pthread_create(&dummy_io_worker_id[i], NULL, dummy_io_worker, NULL);
+	}
+
+	// starts write IO workers if needed
+	pthread_t write_worker_id[write_workers];
+	if (0 < write_workers)
+	{
+		write_worker_stop = 0;
+		pthread_mutex_init(&write_worker_mutex, NULL);
+		unsigned int i;
+		for (i = 0; i < write_workers; i++)
+			pthread_create(&write_worker_id[i], NULL, write_worker, NULL);
 	}
 
 	// cycle to repeat spawn to get average spawn time
@@ -126,6 +216,19 @@ int main(int argc, char **argv)
 		for (i = 0; i < dummy_io_workers; i++)
 			pthread_join(dummy_io_worker_id[i], NULL);
 		pthread_mutex_destroy(&dummy_io_worker_mutex);
+	}
+
+	// cleans gracefully after write IO workers
+	if (0 < write_workers)
+	{
+		pthread_mutex_lock(&write_worker_mutex);
+		write_worker_stop = 1;
+		pthread_mutex_unlock(&write_worker_mutex);
+
+		unsigned int i = 0;
+		for (i = 0; i < write_workers; i++)
+			pthread_join(write_worker_id[i], NULL);
+		pthread_mutex_destroy(&write_worker_mutex);
 	}
 
 	return EX_OK;

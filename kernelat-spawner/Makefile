@@ -3,7 +3,7 @@ OBJ = kernelat-spawner.o
 PREFIX ?= /usr/local
 CC ?= cc
 CFLAGS ?= -O3 -std=c99 -W -Wall -pedantic -D_GNU_SOURCE
-LDADD ?= -lpthread
+LDADD ?= -lpthread -lm -lcrypto
 
 all: build
 
