@@ -13,7 +13,7 @@ Compiling
 * pthreads library (-lpthread)
 * openssl library (-lcrypt)
 * math library (-lm)
-* gnuplot
+* gnuplot (optional for charts plotting)
 
 ### Compilation
 
