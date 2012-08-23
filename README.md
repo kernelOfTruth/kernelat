@@ -30,6 +30,10 @@ Enter "kernelat-spawner" directory and open "kernelat.sh" file for editing. Find
 
 Enter "kernelat-spawner" and run "./kernelat.sh".
 
+### Using results
+
+"kernelat.sh" script produces "plot.out" file that may be plotted using gnuplot. Also you may use "`uname -r`.out" file to create own charts.
+
 Distribution and Contribution
 -----------------------------
 
