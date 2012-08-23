@@ -4,7 +4,7 @@ kernelat
 Silly userspace utility to measure desktop interactivity under different loads.
 
 Compiling
--------
+---------
 
 ### Prerequisites
 
@@ -18,6 +18,9 @@ Compiling
 ### Compilation
 
 Enter kernelat directory and type `make`.
+
+Benchmarking
+------------
 
 ### Setting benchmark options
 
