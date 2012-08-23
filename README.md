@@ -22,6 +22,10 @@ Enter kernelat directory and type `make`.
 Benchmarking
 ------------
 
+### First of all
+
+Disable everything: X, daemons, networking etc. Leave shell only.
+
 ### Setting benchmark options
 
 Enter **kernelat-spawner** directory and open **kernelat.sh** file for editing. Find `seq 1 100` expression and replace it with your preferred threads number (`seq <from_number> <to_number>`). Then find `./kernelat-spawner blah-blah` row inside `for` loop and change the following:
