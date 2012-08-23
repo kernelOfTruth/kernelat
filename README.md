@@ -25,7 +25,7 @@ Enter **kernelat-spawner** directory and open **kernelat.sh** file for editing. 
 
 * -t — number of tries for each step. With higher tries value more accurate results are produced.
 * -w — number of real I/O threads (*writing*).
-* -d — number of dummy I/O threads (*copying from **/dev/zero** to **/dev/null***).
+* -d — number of dummy I/O threads (*copying from __/dev/zero__ to __/dev/null__*).
 
 ### Benchmarking
 
