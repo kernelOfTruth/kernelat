@@ -26,10 +26,22 @@
 #include <math.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 // common vars used by workers
 unsigned int dummy_io_worker_stop, write_worker_stop, block_size = 4096;
 pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex;
+
+void signal_handler(int sig)
+{
+	void *array[10];
+	size_t size;
+
+	size = backtrace(array, 10);
+	fprintf(stderr, "Error: signal %d:\n", sig);
+	backtrace_symbols_fd(array, size, 2);
+	exit(EX_SOFTWARE);
+}
 
 // worker that spawns child to get spawn time
 static void *spawner_worker(void *nothing)
@@ -144,6 +156,9 @@ static void *write_worker(void *nothing)
 
 int main(int argc, char **argv)
 {
+	// install segfault handler
+	signal(SIGSEGV, signal_handler);
+
 	int opt = 0;
 	unsigned int spawner_threads = 1, tries = 10, dummy_io_workers = 0, write_workers = 0;
 
