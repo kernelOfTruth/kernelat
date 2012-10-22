@@ -28,11 +28,15 @@ Disable everything: X, daemons, networking etc. Leave shell only.
 
 ### Setting benchmark options
 
-Enter **kernelat-spawner** directory and open **kernelat.sh** file for editing. Find `seq 1 100` expression and replace it with your preferred threads number (`seq <from_number> <to_number>`). Then find `./kernelat-spawner blah-blah` row inside `for` loop and change the following:
+Enter **kernelat-spawner** directory and open **kernelat.sh** file for editing. Find `./kernelat-spawner blah-blah` row and change the following:
 
+* -f — starting threads count.
+* -o — ending threads count.
 * -t — number of tries for each step. With higher tries value more accurate results are produced.
 * -w — number of real I/O threads (*writing*).
 * -d — number of dummy I/O threads (*copying from __/dev/zero__ to __/dev/null__*).
+* -b — block size of I/O.
+* -m — use msecs instead of usecs.
 
 ### Benchmarking
 

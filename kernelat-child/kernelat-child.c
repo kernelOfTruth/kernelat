@@ -20,11 +20,13 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv)
 {
 	struct timeval time_inside, time_outside;
 	gettimeofday(&time_inside, NULL);
+	gettimeofday(&time_outside, NULL);
 
 	// parses command line arguments to get time before spawn began
 	int opt = 0;
