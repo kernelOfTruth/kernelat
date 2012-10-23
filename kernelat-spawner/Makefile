@@ -1,5 +1,5 @@
 PROG = kernelat-spawner
-OBJ = kernelat-spawner.o
+OBJ = kernelat-spawner.o mm.o
 PREFIX ?= /usr/local
 CC ?= cc
 CFLAGS = -O3 -std=c99 -W -Wall -pedantic -D_GNU_SOURCE

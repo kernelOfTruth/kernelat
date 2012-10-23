@@ -27,17 +27,12 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <execinfo.h>
+#include "ka_types.h"
+#include "mm.h"
 
 // common vars used by workers
 unsigned long int dummy_io_worker_stop, write_worker_stop, time_sum, block_size = 4096;
 pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex, time_output_mutex;
-
-typedef struct spawner_worker_data
-{
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
-	int ready;
-} spawner_worker_data_t;
 
 void signal_handler(int sig)
 {
@@ -48,66 +43,6 @@ void signal_handler(int sig)
 	fprintf(stderr, "Error: signal %d:\n", sig);
 	backtrace_symbols_fd(array, size, 2);
 	exit(EX_SOFTWARE);
-}
-
-char *mm_alloc_char(int size)
-{
-	if (size < 1)
-	{
-		fprintf(stderr, "mm_alloc_char: size is too small\n");
-		return NULL;
-	}
-
-	char *data = calloc(size, sizeof(char));
-	if (!data)
-	{
-		fprintf(stderr, "mm_alloc_char: unable to allocate %d\n", size);
-		return NULL;
-	}
-
-	return data;
-}
-
-void mm_free_char(char *data)
-{
-	if (!data)
-	{
-		fprintf(stderr, "mm_free_char: memory is not allocated\n");
-		return;
-	}
-
-	free(data);
-	data = NULL;
-}
-
-spawner_worker_data_t *mm_alloc_spawner_worker_data_t(int size)
-{
-	if (size < 1)
-	{
-		fprintf(stderr, "mm_alloc_spawner_worker_data_t: size is too small\n");
-		return NULL;
-	}
-
-	spawner_worker_data_t *data = calloc(size, sizeof(spawner_worker_data_t));
-	if (!data)
-	{
-		fprintf(stderr, "mm_alloc_spawner_worker_data_t: unable to allocate %d\n", size);
-		return NULL;
-	}
-
-	return data;
-}
-
-void mm_free_spawner_worker_data_t(spawner_worker_data_t *data)
-{
-	if (!data)
-	{
-		fprintf(stderr, "mm_free_spawner_worker_data_t: memory is not allocated\n");
-		return;
-	}
-
-	free(data);
-	data = NULL;
 }
 
 // worker that spawns child to get spawn time
