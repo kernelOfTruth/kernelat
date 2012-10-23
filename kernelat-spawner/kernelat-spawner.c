@@ -50,10 +50,70 @@ void signal_handler(int sig)
 	exit(EX_SOFTWARE);
 }
 
+char *mm_alloc_char(int size)
+{
+	if (size < 1)
+	{
+		fprintf(stderr, "mm_alloc_char: size is too small\n");
+		return NULL;
+	}
+
+	char *data = calloc(size, sizeof(char));
+	if (!data)
+	{
+		fprintf(stderr, "mm_alloc_char: unable to allocate %d\n", size);
+		return NULL;
+	}
+
+	return data;
+}
+
+void mm_free_char(char *data)
+{
+	if (!data)
+	{
+		fprintf(stderr, "mm_free_char: memory is not allocated\n");
+		return;
+	}
+
+	free(data);
+	data = NULL;
+}
+
+spawner_worker_data_t *mm_alloc_spawner_worker_data_t(int size)
+{
+	if (size < 1)
+	{
+		fprintf(stderr, "mm_alloc_spawner_worker_data_t: size is too small\n");
+		return NULL;
+	}
+
+	spawner_worker_data_t *data = calloc(size, sizeof(spawner_worker_data_t));
+	if (!data)
+	{
+		fprintf(stderr, "mm_alloc_spawner_worker_data_t: unable to allocate %d\n", size);
+		return NULL;
+	}
+
+	return data;
+}
+
+void mm_free_spawner_worker_data_t(spawner_worker_data_t *data)
+{
+	if (!data)
+	{
+		fprintf(stderr, "mm_free_spawner_worker_data_t: memory is not allocated\n");
+		return;
+	}
+
+	free(data);
+	data = NULL;
+}
+
 // worker that spawns child to get spawn time
 static void *spawner_worker(void *data)
 {
-	char *command = calloc(256, sizeof(char));
+	char *command = mm_alloc_char(256);
 	struct timeval spawn_time;
 
 	spawner_worker_data_t *d = data;
@@ -74,6 +134,8 @@ static void *spawner_worker(void *data)
 	fscanf(pf, "%lu\n", &got_time);
 	pclose(pf);
 
+	mm_free_char(command);
+
 	pthread_mutex_lock(&time_output_mutex);
 	time_sum += got_time;
 	pthread_mutex_unlock(&time_output_mutex);
@@ -88,7 +150,7 @@ static void *dummy_io_worker(void *nothing)
 
 	FILE *zero = fopen("/dev/zero", "rb");
 	FILE *null = fopen("/dev/null", "w");
-	char *buffer = calloc(block_size, sizeof(char));
+	char *buffer = mm_alloc_char(block_size);
 
 	while (1)
 	{
@@ -98,7 +160,7 @@ static void *dummy_io_worker(void *nothing)
 		{
 			// exits gracefully
 			pthread_mutex_unlock(&dummy_io_worker_mutex);
-			free(buffer);
+			mm_free_char(buffer);
 			fclose(zero);
 			fclose(null);
 			pthread_exit(NULL);
@@ -132,25 +194,28 @@ static void *write_worker(void *nothing)
 {
 	(void) nothing;
 
-	char *filename = calloc(44, sizeof(char));
+	char *filename = mm_alloc_char(44);
 	struct stat sts;
-	do
+	while (1)
 	{
-		if (filename != NULL)
-		{
-			free(filename);
-			filename = NULL;
-			filename = calloc(44, sizeof(char));
-		}
 		char headname[40];
 		gen_random(headname, 40);
 		strncpy(filename, headname, 40);
 		strcat(filename, ".out");
-	} while (stat(filename, &sts) != -1);
+
+		if (stat(filename, &sts) == -1)
+			break;
+		else
+		{
+			mm_free_char(filename);
+			filename = mm_alloc_char(44);
+		}
+		
+	};
 
 	FILE *zero = fopen("/dev/zero", "rb");
 	FILE *f = fopen(filename, "w");
-	char *buffer = calloc(block_size, sizeof(char));
+	char *buffer = mm_alloc_char(block_size);
 
 	while (1)
 	{
@@ -160,10 +225,11 @@ static void *write_worker(void *nothing)
 		{
 			// exits gracefully
 			pthread_mutex_unlock(&write_worker_mutex);
-			free(buffer);
+			mm_free_char(buffer);
 			fclose(zero);
 			fclose(f);
 			remove(filename);
+			mm_free_char(filename);
 			pthread_exit(0);
 		} else
 			pthread_mutex_unlock(&write_worker_mutex);
@@ -247,7 +313,7 @@ int main(int argc, char **argv)
 			// prefork workers
 			for (unsigned int i = 0; i < current_threads; i++)
 			{
-				data[i] = calloc(1, sizeof(spawner_worker_data_t));
+				data[i] = mm_alloc_spawner_worker_data_t(1);
 				pthread_mutex_init(&data[i]->mutex, NULL);
 				pthread_cond_init(&data[i]->cond, NULL);
 				data[i]->ready = 0;
@@ -267,7 +333,7 @@ int main(int argc, char **argv)
 			for (unsigned int i = 0; i < current_threads; i++)
 			{
 				pthread_join(ids[i], NULL);
-				free(data[i]);
+				mm_free_spawner_worker_data_t(data[i]);
 			}
 		}
 
