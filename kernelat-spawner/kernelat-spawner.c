@@ -49,7 +49,7 @@ static void *spawner_worker(void *nothing)
 {
 	(void) nothing;
 
-	char *command = malloc(256 * sizeof(char));
+	char *command = calloc(256, sizeof(char));
 	struct timeval spawn_time;
 
 	gettimeofday(&spawn_time, NULL);	
@@ -78,7 +78,7 @@ static void *dummy_io_worker(void *nothing)
 
 	FILE *zero = fopen("/dev/zero", "rb");
 	FILE *null = fopen("/dev/null", "w");
-	char *buffer = malloc(block_size * sizeof(char));
+	char *buffer = calloc(block_size, sizeof(char));
 
 	while (1)
 	{
@@ -118,15 +118,15 @@ static void *write_worker(void *nothing)
 		unsigned int secs_length = (int)round(log10(pow(2, 8 * sizeof(time_t)))) + 1;
 		unsigned int usecs_length = (int)round(log10(pow(2, 8 * sizeof(suseconds_t)))) + 1;
 		unsigned int salt_length = (int)round(log10(pow(2, 8 * sizeof(long int)))) + 1;
-		char *secs = malloc(secs_length * sizeof(char));
-		char *usecs = malloc(usecs_length * sizeof(char));
-		char *salt = malloc(salt_length * sizeof(char));
+		char *secs = calloc(secs_length, sizeof(char));
+		char *usecs = calloc(usecs_length, sizeof(char));
+		char *salt = calloc(salt_length, sizeof(char));
 		sprintf(secs, "%ld", current_time.tv_sec);
 		sprintf(usecs, "%ld", current_time.tv_usec);
 		sprintf(salt, "%ld", random());
 		
 		unsigned int name_length = secs_length + usecs_length + salt_length;
-		char *name_1 = malloc(name_length * sizeof(char));
+		char *name_1 = calloc(name_length, sizeof(char));
 		strcat(name_1, secs);
 		strcat(name_1, usecs);
 		strcat(name_1, salt);
@@ -150,7 +150,7 @@ static void *write_worker(void *nothing)
 
 	FILE *zero = fopen("/dev/zero", "rb");
 	FILE *f = fopen(filename, "w");
-	char *buffer = malloc(block_size * sizeof(char));
+	char *buffer = calloc(block_size, sizeof(char));
 
 	while (1)
 	{
