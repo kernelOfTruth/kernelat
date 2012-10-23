@@ -32,6 +32,13 @@
 unsigned long int dummy_io_worker_stop, write_worker_stop, time_sum, block_size = 4096;
 pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex, time_output_mutex;
 
+typedef struct spawner_worker_data
+{
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+	int ready;
+} spawner_worker_data_t;
+
 void signal_handler(int sig)
 {
 	void *array[10];
@@ -44,12 +51,16 @@ void signal_handler(int sig)
 }
 
 // worker that spawns child to get spawn time
-static void *spawner_worker(void *nothing)
+static void *spawner_worker(void *data)
 {
-	(void) nothing;
-
 	char *command = calloc(256, sizeof(char));
 	struct timeval spawn_time;
+
+	spawner_worker_data_t *d = data;
+	pthread_mutex_lock(&d->mutex);
+	while (d->ready == 0)
+		pthread_cond_wait(&d->cond, &d->mutex);
+	pthread_mutex_unlock(&d->mutex);
 
 	gettimeofday(&spawn_time, NULL);	
 	sprintf(command, "../kernelat-child/kernelat-child -s %ld -u %ld", spawn_time.tv_sec, spawn_time.tv_usec);
@@ -231,13 +242,33 @@ int main(int argc, char **argv)
 		for (unsigned int ctry = 0; ctry <= tries; ctry++)
 		{
 			pthread_t ids[current_threads];
+			spawner_worker_data_t *data[current_threads];
 			
-			unsigned int i;
-			for (i = 0; i < current_threads; i++)
-				pthread_create(&ids[i], NULL, spawner_worker, NULL);
+			// prefork workers
+			for (unsigned int i = 0; i < current_threads; i++)
+			{
+				data[i] = calloc(1, sizeof(spawner_worker_data_t));
+				pthread_mutex_init(&data[i]->mutex, NULL);
+				pthread_cond_init(&data[i]->cond, NULL);
+				data[i]->ready = 0;
+				pthread_create(&ids[i], NULL, spawner_worker, data[i]);
+			}
 
-			for (i = 0; i < current_threads; i++)
+			// start workers
+			for (unsigned int i = 0; i < current_threads; i++)
+			{
+				pthread_mutex_lock(&data[i]->mutex);
+				data[i]->ready = 1;
+				pthread_cond_signal(&data[i]->cond);
+				pthread_mutex_unlock(&data[i]->mutex);
+			}
+
+			// join and free workers
+			for (unsigned int i = 0; i < current_threads; i++)
+			{
 				pthread_join(ids[i], NULL);
+				free(data[i]);
+			}
 		}
 
 		// cleans gracefully after dummy IO workers
