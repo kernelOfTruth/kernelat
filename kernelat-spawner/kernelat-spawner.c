@@ -267,6 +267,7 @@ int main(int argc, char **argv)
 		}
 
 		fprintf(stdout, "%u\t%1.3lf\n", current_threads, (double) time_sum / (tries * current_threads * usecs_divider));
+		fprintf(stderr, "Completed: %1.3lf%%\n", 100 * (double) (current_threads - from_threads) / (to_threads - from_threads));
 	}
 	pthread_mutex_destroy(&time_output_mutex);
 
