@@ -11,7 +11,6 @@ Compiling
 * gcc
 * make
 * pthreads library (-lpthread)
-* openssl library (-lcrypt)
 * math library (-lm)
 * gnuplot (optional for charts plotting)
 

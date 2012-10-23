@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <openssl/sha.h>
 #include <math.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -101,50 +100,40 @@ static void *dummy_io_worker(void *nothing)
 	}
 }
 
+void gen_random(char *s, const int len)
+{
+	static const char alphanum[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
+
+	for (int i = 0; i < len; ++i)
+	{
+		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	}
+
+	s[len] = 0;
+}
+
+
 // writes to file
 static void *write_worker(void *nothing)
 {
 	(void) nothing;
 
-	char filename[44];
+	char *filename = calloc(44, sizeof(char));
 	struct stat sts;
 	do
 	{
-		struct timeval current_time;
-		gettimeofday(&current_time, NULL);
-		srandom(current_time.tv_sec + current_time.tv_usec);
-
-		// never ask me why I did so
-		unsigned int secs_length = (int)round(log10(pow(2, 8 * sizeof(time_t)))) + 1;
-		unsigned int usecs_length = (int)round(log10(pow(2, 8 * sizeof(suseconds_t)))) + 1;
-		unsigned int salt_length = (int)round(log10(pow(2, 8 * sizeof(long int)))) + 1;
-		char *secs = calloc(secs_length, sizeof(char));
-		char *usecs = calloc(usecs_length, sizeof(char));
-		char *salt = calloc(salt_length, sizeof(char));
-		sprintf(secs, "%ld", current_time.tv_sec);
-		sprintf(usecs, "%ld", current_time.tv_usec);
-		sprintf(salt, "%ld", random());
-		
-		unsigned int name_length = secs_length + usecs_length + salt_length;
-		char *name_1 = calloc(name_length, sizeof(char));
-		strcat(name_1, secs);
-		strcat(name_1, usecs);
-		strcat(name_1, salt);
-		free(secs);
-		free(usecs);
-		free(salt);
-
-		unsigned char digest[20];
-		SHA1((unsigned char *)name_1, name_length, digest);
-		free(name_1);
-		
-		unsigned int i;
-		for (i = 0; i < 20; i++)
+		if (filename != NULL)
 		{
-			char current[1];
-			sprintf(current, "%02x", digest[i]);
-			strcat(filename, current);
+			free(filename);
+			filename = NULL;
+			filename = calloc(44, sizeof(char));
 		}
+		char headname[40];
+		gen_random(headname, 40);
+		strncpy(filename, headname, 40);
 		strcat(filename, ".out");
 	} while (stat(filename, &sts) != -1);
 
