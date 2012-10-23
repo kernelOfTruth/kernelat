@@ -29,21 +29,11 @@
 #include <execinfo.h>
 #include "ka_types.h"
 #include "mm.h"
+#include "tools.h"
 
 // common vars used by workers
 unsigned long int dummy_io_worker_stop, write_worker_stop, time_sum, block_size = 4096;
 pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex, time_output_mutex;
-
-void signal_handler(int sig)
-{
-	void *array[10];
-	size_t size;
-
-	size = backtrace(array, 10);
-	fprintf(stderr, "Error: signal %d:\n", sig);
-	backtrace_symbols_fd(array, size, 2);
-	exit(EX_SOFTWARE);
-}
 
 // worker that spawns child to get spawn time
 static void *spawner_worker(void *data)
@@ -107,22 +97,6 @@ static void *dummy_io_worker(void *nothing)
 		fwrite(buffer, block_size, 1, null);
 	}
 }
-
-void gen_random(char *s, const int len)
-{
-	static const char alphanum[] =
-		"0123456789"
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz";
-
-	for (int i = 0; i < len; ++i)
-	{
-		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
-	}
-
-	s[len] = 0;
-}
-
 
 // writes to file
 static void *write_worker(void *nothing)
