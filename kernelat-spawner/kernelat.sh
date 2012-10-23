@@ -4,7 +4,7 @@ rm -f *.out
 
 kern_rel=`uname -r`
 
-./kernelat-spawner -f 1 -o 10 -t 10 -w 5 -m >$kern_rel.out
+./kernelat-spawner -f 1 -o 50 -t 10 -w 2 -m >$kern_rel.out
 
 echo "set grid;" >plot.out
 echo "set xlabel 'Number of threads';" >>plot.out
