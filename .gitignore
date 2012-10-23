@@ -1,5 +1,5 @@
+tests
 *.o
 *.out
 kernelat-child/kernelat-child
 kernelat-spawner/kernelat-spawner
-kernelat-spawner/verified
