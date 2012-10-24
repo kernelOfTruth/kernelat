@@ -43,7 +43,7 @@ static void spawner_worker(void *data)
 	struct timeval spawn_time;
 	memset(&spawn_time, 0, sizeof(struct timeval));
 
-	spawner_worker_data_t *d = data;
+	spawner_worker_opdata_t *d = data;
 
 	gettimeofday(&spawn_time, NULL);	
 	sprintf(command, "../kernelat-child/kernelat-child -s %ld -u %ld", spawn_time.tv_sec, spawn_time.tv_usec);
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 	}
 
 	worker_data_t *workers_data[to_threads];
-	spawner_worker_data_t workers_opdata[to_threads];
+	spawner_worker_opdata_t workers_opdata[to_threads];
 
 	// prefork workers
 	for (unsigned int i = 0; i < to_threads; i++)

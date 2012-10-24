@@ -21,10 +21,10 @@
 
 #include <pthread.h>
 
-typedef struct spawner_worker_data
+typedef struct spawner_worker_opdata
 {
 	unsigned long int spawn_time;
-} spawner_worker_data_t;
+} spawner_worker_opdata_t;
 
 #endif
 
