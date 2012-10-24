@@ -257,7 +257,7 @@ int main(int argc, char **argv)
 		}
 
 		fprintf(stdout, "%u\t%1.3lf\n", current_threads, (double) time_sum / (tries * current_threads * usecs_divider));
-		fprintf(stderr, "Completed: %1.3lf%%\n", 100 * (double) (current_threads - from_threads) / (to_threads - from_threads));
+		fprintf(stderr, "Completed: %1.3lf%%\n", 100 * (double) (current_threads - from_threads + 1) / (to_threads - from_threads + 1));
 	}
 
 	for (unsigned int i = 0; i < to_threads; i++)
