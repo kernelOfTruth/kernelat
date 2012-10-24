@@ -41,6 +41,7 @@ static void spawner_worker(void *data)
 {
 	char *command = mm_alloc_char(256);
 	struct timeval spawn_time;
+	memset(&spawn_time, 0, sizeof(struct timeval));
 
 	spawner_worker_data_t *d = data;
 
