@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <execinfo.h>
+#include <sys/stat.h>
+#include <string.h>
+#include "mm.h"
 
 void signal_handler(int sig)
 {
@@ -45,5 +48,28 @@ void gen_random(char *s, const int len)
 	}
 
 	s[len] = 0;
+}
+
+char *get_unique_filename(void)
+{
+	char *filename = mm_alloc_char(44);
+	struct stat sts;
+	while (1)
+	{
+		char headname[40];
+		gen_random(headname, 40);
+		strncpy(filename, headname, 40);
+		strcat(filename, ".out");
+
+		if (stat(filename, &sts) == -1)
+			break;
+		else
+		{
+			mm_free_char(filename);
+			filename = mm_alloc_char(44);
+		}
+		
+	}
+	return filename;
 }
 

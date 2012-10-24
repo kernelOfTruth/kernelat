@@ -24,7 +24,6 @@
 #include <pthread.h>
 #include <math.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <signal.h>
 #include <execinfo.h>
 #include <libpww.h>
@@ -92,26 +91,8 @@ static void *write_worker(void *nothing)
 {
 	(void) nothing;
 
-	char *filename = mm_alloc_char(44);
-	struct stat sts;
-	while (1)
-	{
-		char headname[40];
-		gen_random(headname, 40);
-		strncpy(filename, headname, 40);
-		strcat(filename, ".out");
-
-		if (stat(filename, &sts) == -1)
-			break;
-		else
-		{
-			mm_free_char(filename);
-			filename = mm_alloc_char(44);
-		}
-		
-	};
-
 	FILE *zero = fopen("/dev/zero", "rb");
+	char *filename = get_unique_filename();
 	FILE *f = fopen(filename, "w");
 	char *buffer = mm_alloc_char(block_size);
 
