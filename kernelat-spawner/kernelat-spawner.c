@@ -146,7 +146,6 @@ static void *write_worker(void *nothing)
 
 int main(int argc, char **argv)
 {
-	printf("main");
 	// install segfault handler
 	signal(SIGSEGV, signal_handler);
 
@@ -182,6 +181,13 @@ int main(int argc, char **argv)
 		}
 	}
 
+	worker_data_t *workers_data[to_threads];
+	spawner_worker_data_t workers_opdata[to_threads];
+
+	// prefork workers
+	for (unsigned int i = 0; i < to_threads; i++)
+		workers_data[i] = pww_start_worker();
+
 	for (unsigned int current_threads = from_threads; current_threads <= to_threads; current_threads++)
 	{
 		unsigned long int time_sum = 0;
@@ -211,23 +217,15 @@ int main(int argc, char **argv)
 		// cycle to repeat spawn to get average spawn time
 		for (unsigned int ctry = 0; ctry <= tries; ctry++)
 		{
-			worker_data_t *workers_data[current_threads];
-			spawner_worker_data_t workers_opdata[current_threads];
-
-			// prefork workers
-			for (unsigned int i = 0; i < current_threads; i++)
-				workers_data[i] = pww_start_worker();
-
 			// start workers
 			for (unsigned int i = 0; i < current_threads; i++)
 				pww_submit_task(workers_data[i], &workers_opdata[i], spawner_worker);
 
-			// join and free workers
+			// join workers
 			for (unsigned int i = 0; i < current_threads; i++)
 			{
 				pww_join_task(workers_data[i]);
 				time_sum += workers_opdata[i].spawn_time;
-				pww_exit_task(workers_data[i]);
 			}
 		}
 
@@ -260,6 +258,9 @@ int main(int argc, char **argv)
 		fprintf(stdout, "%u\t%1.3lf\n", current_threads, (double) time_sum / (tries * current_threads * usecs_divider));
 		fprintf(stderr, "Completed: %1.3lf%%\n", 100 * (double) (current_threads - from_threads) / (to_threads - from_threads));
 	}
+
+	for (unsigned int i = 0; i < to_threads; i++)
+		pww_exit_task(workers_data[i]);
 
 	return EX_OK;
 }
