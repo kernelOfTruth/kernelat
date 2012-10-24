@@ -23,9 +23,7 @@
 
 typedef struct spawner_worker_data
 {
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
-	int ready;
+	unsigned long int spawn_time;
 } spawner_worker_data_t;
 
 #endif

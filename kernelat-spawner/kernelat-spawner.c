@@ -27,25 +27,22 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <execinfo.h>
+#include <libpww.h>
 #include "ka_types.h"
 #include "mm.h"
 #include "tools.h"
 
 // common vars used by workers
-unsigned long int dummy_io_worker_stop, write_worker_stop, time_sum, block_size = 4096;
-pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex, time_output_mutex;
+unsigned long int dummy_io_worker_stop, write_worker_stop, block_size = 4096;
+pthread_mutex_t dummy_io_worker_mutex, write_worker_mutex;
 
 // worker that spawns child to get spawn time
-static void *spawner_worker(void *data)
+static void spawner_worker(void *data)
 {
 	char *command = mm_alloc_char(256);
 	struct timeval spawn_time;
 
 	spawner_worker_data_t *d = data;
-	pthread_mutex_lock(&d->mutex);
-	while (d->ready == 0)
-		pthread_cond_wait(&d->cond, &d->mutex);
-	pthread_mutex_unlock(&d->mutex);
 
 	gettimeofday(&spawn_time, NULL);	
 	sprintf(command, "../kernelat-child/kernelat-child -s %ld -u %ld", spawn_time.tv_sec, spawn_time.tv_usec);
@@ -59,13 +56,11 @@ static void *spawner_worker(void *data)
 	fscanf(pf, "%lu\n", &got_time);
 	pclose(pf);
 
+	d->spawn_time = got_time;
+
 	mm_free_char(command);
 
-	pthread_mutex_lock(&time_output_mutex);
-	time_sum += got_time;
-	pthread_mutex_unlock(&time_output_mutex);
-
-	return NULL;
+	return;
 }
 
 // copies from /dev/zero to /dev/null
@@ -151,6 +146,7 @@ static void *write_worker(void *nothing)
 
 int main(int argc, char **argv)
 {
+	printf("main");
 	// install segfault handler
 	signal(SIGSEGV, signal_handler);
 
@@ -186,10 +182,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	pthread_mutex_init(&time_output_mutex, NULL);
 	for (unsigned int current_threads = from_threads; current_threads <= to_threads; current_threads++)
 	{
-		time_sum = 0;
+		unsigned long int time_sum = 0;
 
 		// starts dummy IO workers if needed
 		pthread_t dummy_io_worker_id[dummy_io_workers];
@@ -216,33 +211,23 @@ int main(int argc, char **argv)
 		// cycle to repeat spawn to get average spawn time
 		for (unsigned int ctry = 0; ctry <= tries; ctry++)
 		{
-			pthread_t ids[current_threads];
-			spawner_worker_data_t *data[current_threads];
-			
+			worker_data_t *workers_data[current_threads];
+			spawner_worker_data_t workers_opdata[current_threads];
+
 			// prefork workers
 			for (unsigned int i = 0; i < current_threads; i++)
-			{
-				data[i] = mm_alloc_spawner_worker_data_t(1);
-				pthread_mutex_init(&data[i]->mutex, NULL);
-				pthread_cond_init(&data[i]->cond, NULL);
-				data[i]->ready = 0;
-				pthread_create(&ids[i], NULL, spawner_worker, data[i]);
-			}
+				workers_data[i] = pww_start_worker();
 
 			// start workers
 			for (unsigned int i = 0; i < current_threads; i++)
-			{
-				pthread_mutex_lock(&data[i]->mutex);
-				data[i]->ready = 1;
-				pthread_cond_signal(&data[i]->cond);
-				pthread_mutex_unlock(&data[i]->mutex);
-			}
+				pww_submit_task(workers_data[i], &workers_opdata[i], spawner_worker);
 
 			// join and free workers
 			for (unsigned int i = 0; i < current_threads; i++)
 			{
-				pthread_join(ids[i], NULL);
-				mm_free_spawner_worker_data_t(data[i]);
+				pww_join_task(workers_data[i]);
+				time_sum += workers_opdata[i].spawn_time;
+				pww_exit_task(workers_data[i]);
 			}
 		}
 
@@ -275,7 +260,6 @@ int main(int argc, char **argv)
 		fprintf(stdout, "%u\t%1.3lf\n", current_threads, (double) time_sum / (tries * current_threads * usecs_divider));
 		fprintf(stderr, "Completed: %1.3lf%%\n", 100 * (double) (current_threads - from_threads) / (to_threads - from_threads));
 	}
-	pthread_mutex_destroy(&time_output_mutex);
 
 	return EX_OK;
 }
