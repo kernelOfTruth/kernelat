@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <execinfo.h>
 #include <libpww.h>
+#include "kernelat-spawner.h"
 #include "ka_types.h"
 #include "mm.h"
 #include "tools.h"
@@ -39,7 +40,7 @@ pthread_mutex_t write_worker_mutex;
 // worker that spawns child to get spawn time
 static void spawner_worker(void *data)
 {
-	char *command = mm_alloc_char(256);
+	char *command = mm_alloc_char(CHILD_COMMAND_LENGTH);
 	struct timeval spawn_time;
 	memset(&spawn_time, 0, sizeof(struct timeval));
 
