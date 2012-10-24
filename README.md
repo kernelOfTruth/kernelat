@@ -12,6 +12,7 @@ Compiling
 * make
 * pthreads library (-lpthread)
 * math library (-lm)
+* pww library (-lpww)
 * gnuplot (optional for charts plotting)
 
 ### Compilation
