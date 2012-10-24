@@ -26,14 +26,15 @@ typedef struct spawner_worker_opdata
 	unsigned long int spawn_time;
 } spawner_worker_opdata_t;
 
-typedef struct dummy_io_worker_opdata
+typedef struct io_worker_opdata
 {
 	FILE *zero;
-	FILE *null;
+	FILE *file;
+	char *filename;
 	char *buffer;
 	unsigned int exit;
 	pthread_mutex_t mutex;
-} dummy_io_worker_opdata_t;
+} io_worker_opdata_t;
 
 #endif
 
