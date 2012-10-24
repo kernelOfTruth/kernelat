@@ -45,27 +45,3 @@ void mm_free_char(char *data)
 	data = NULL;
 }
 
-spawner_worker_data_t *mm_alloc_spawner_worker_data_t(int size)
-{
-	if (size < 1)
-	{
-		fprintf(stderr, "mm_alloc_spawner_worker_data_t: size is too small\n");
-		return NULL;
-	}
-
-	spawner_worker_data_t *data = calloc(size, sizeof(spawner_worker_data_t));
-	if (!data)
-	{
-		fprintf(stderr, "mm_alloc_spawner_worker_data_t: unable to allocate %d\n", size);
-		return NULL;
-	}
-
-	return data;
-}
-
-void mm_free_spawner_worker_data_t(spawner_worker_data_t *data)
-{
-	free(data);
-	data = NULL;
-}
-

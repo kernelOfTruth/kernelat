@@ -23,8 +23,6 @@
 
 char *mm_alloc_char(int size);
 void mm_free_char(char *data);
-spawner_worker_data_t *mm_alloc_spawner_worker_data_t(int size);
-void mm_free_spawner_worker_data_t(spawner_worker_data_t *data);
 
 #endif
 
