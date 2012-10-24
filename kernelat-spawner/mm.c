@@ -41,12 +41,6 @@ char *mm_alloc_char(int size)
 
 void mm_free_char(char *data)
 {
-	if (!data)
-	{
-		fprintf(stderr, "mm_free_char: memory is not allocated\n");
-		return;
-	}
-
 	free(data);
 	data = NULL;
 }
@@ -71,12 +65,6 @@ spawner_worker_data_t *mm_alloc_spawner_worker_data_t(int size)
 
 void mm_free_spawner_worker_data_t(spawner_worker_data_t *data)
 {
-	if (!data)
-	{
-		fprintf(stderr, "mm_free_spawner_worker_data_t: memory is not allocated\n");
-		return;
-	}
-
 	free(data);
 	data = NULL;
 }
