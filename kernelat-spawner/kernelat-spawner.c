@@ -271,6 +271,6 @@ int main(int argc, char **argv)
 		mm_free_char(dummy_io_workers_opdata[i].buffer);
 	}
 
-	return EX_OK;
+	exit(EX_OK);
 }
 
