@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 		dummy_io_workers_opdata[i].zero = fopen("/dev/zero", "r");
 		dummy_io_workers_opdata[i].file = fopen("/dev/null", "w");
 		dummy_io_workers_opdata[i].buffer = mm_alloc_char(block_size);
+		dummy_io_workers_opdata[i].exit = 0;
 		pthread_mutex_init(&dummy_io_workers_opdata[i].mutex, NULL);
 		dummy_io_workers_data[i] = pww_start_worker();
 	}
@@ -151,6 +152,7 @@ int main(int argc, char **argv)
 		real_io_workers_opdata[i].filename = get_unique_filename();
 		real_io_workers_opdata[i].file = fopen(real_io_workers_opdata[i].filename, "w");
 		real_io_workers_opdata[i].buffer = mm_alloc_char(block_size);
+		real_io_workers_opdata[i].exit = 0;
 		pthread_mutex_init(&real_io_workers_opdata[i].mutex, NULL);
 		real_io_workers_data[i] = pww_start_worker();
 	}
@@ -164,21 +166,11 @@ int main(int argc, char **argv)
 		{
 			// start dummy IO workers
 			for (unsigned int i = 0; i < dummy_io_workers; i++)
-			{
-				pthread_mutex_lock(&dummy_io_workers_opdata[i].mutex);
-				dummy_io_workers_opdata[i].exit = 0;
-				pthread_mutex_unlock(&dummy_io_workers_opdata[i].mutex);
 				pww_submit_task(dummy_io_workers_data[i], &dummy_io_workers_opdata[i], io_worker);
-			}
 
 			// start real IO workers
 			for (unsigned int i = 0; i < real_io_workers; i++)
-			{
-				pthread_mutex_lock(&real_io_workers_opdata[i].mutex);
-				real_io_workers_opdata[i].exit = 0;
-				pthread_mutex_unlock(&real_io_workers_opdata[i].mutex);
 				pww_submit_task(real_io_workers_data[i], &real_io_workers_opdata[i], io_worker);
-			}
 
 			// start spawner workers
 			for (unsigned int i = 0; i < current_threads; i++)
