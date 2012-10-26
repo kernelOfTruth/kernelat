@@ -12,7 +12,7 @@ Compiling
 * make
 * pthreads library (-lpthread)
 * math library (-lm)
-* pww library (-lpww)
+* [pww library](https://github.com/pfactum/libpww) (-lpww)
 * gnuplot (optional for charts plotting)
 
 ### Compilation
