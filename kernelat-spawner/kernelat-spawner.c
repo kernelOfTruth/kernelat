@@ -22,10 +22,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <math.h>
 #include <string.h>
 #include <signal.h>
-#include <execinfo.h>
 #include <libpww.h>
 #include <zmq.h>
 #include "kernelat-spawner.h"

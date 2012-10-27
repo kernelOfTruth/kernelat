@@ -11,7 +11,6 @@ Compiling
 * gcc
 * make
 * pthreads library (-lpthread)
-* math library (-lm)
 * [pww library](https://github.com/pfactum/libpww) (-lpww)
 * 0MQ library (-lzmq)
 * gnuplot (optional for charts plotting)
