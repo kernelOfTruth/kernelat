@@ -18,7 +18,7 @@ Compiling
 
 ### Compilation
 
-Enter kernelat directory and type `make`. Then copy binaries from **kernelat-child** and **kernelat-spawner** directory to **kernelat-tester** directory.
+Enter kernelat directory and type `make`. Then type `make local-install` to install binaries in **kernelat-tester** directory.
 
 Benchmarking
 ------------

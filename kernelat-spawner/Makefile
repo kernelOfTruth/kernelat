@@ -18,6 +18,9 @@ $(PROG): $(OBJ)
 install:
 	install -Dm 0755 $(PROG) $(DESTDIR)$(PREFIX)/bin/$(PROG)
 
+local-install:
+	install -Dm 0755 $(PROG) ../kernelat-tester/$(PROG)
+
 clean:
 	rm -f $(OBJ) $(PROG)
 
