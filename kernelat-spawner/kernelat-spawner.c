@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <execinfo.h>
 #include <libpww.h>
+#include <zmq.h>
 #include "kernelat-spawner.h"
 #include "ka_types.h"
 #include "mm.h"
@@ -34,31 +35,38 @@
 
 // common vars used by workers
 unsigned long int block_size = 4096;
+void *zmq_context;
 
 // worker that spawns child to get spawn time
 static void spawner_worker(void *data)
 {
 	char *command = mm_alloc_char(CHILD_COMMAND_LENGTH);
-	struct timeval spawn_time;
-	memset(&spawn_time, 0, sizeof(struct timeval));
-
+	struct timeval prespawn_time;
+	memset(&prespawn_time, 0, sizeof(struct timeval));
 	spawner_worker_opdata_t *d = data;
 
-	gettimeofday(&spawn_time, NULL);	
-	sprintf(command, "../kernelat-child/kernelat-child -s %ld -u %ld", spawn_time.tv_sec, spawn_time.tv_usec);
-	FILE *pf = popen(command, "r");
-	if (pf == NULL)
-	{
-		fprintf(stderr, "Couldn't open output pipe\n");
-		exit(EX_IOERR);
-	}
-	unsigned long int got_time = 0;
-	fscanf(pf, "%lu\n", &got_time);
-	pclose(pf);
+	void *zmq_sock = zmq_socket(zmq_context, ZMQ_REP);
+	char *tmpfile = mm_alloc_char(50);
+	strcpy(tmpfile, "ipc://");
+	strcat(tmpfile, get_unique_filename());
+	zmq_bind(zmq_sock, tmpfile);
 
-	d->spawn_time = got_time;
-
+	sprintf(command, "./kernelat-child -t %s", tmpfile);
+	gettimeofday(&prespawn_time, NULL);
+	system(command);
 	mm_free_char(command);
+
+	zmq_msg_t msg;
+	zmq_msg_init(&msg);
+	zmq_recv(zmq_sock, &msg, 0);
+	struct timeval postspawn_time;
+	memset(&postspawn_time, 0, sizeof(struct timeval));
+	memcpy(&postspawn_time, zmq_msg_data(&msg), zmq_msg_size(&msg));
+	zmq_msg_close(&msg);
+	zmq_close(zmq_sock);
+
+	unsigned long int spawn_time = (postspawn_time.tv_sec * 1000000 + postspawn_time.tv_usec) - (prespawn_time.tv_sec * 1000000 + prespawn_time.tv_usec);
+	d->spawn_time = spawn_time;
 
 	return;
 }
@@ -130,6 +138,10 @@ int main(int argc, char **argv)
 	worker_data_t *real_io_workers_data[real_io_workers];
 	io_worker_opdata_t real_io_workers_opdata[real_io_workers];
 
+	// start 0mq server
+	zmq_context = zmq_init(1);
+	
+
 	// prefork spawner workers
 	for (unsigned int i = 0; i < to_threads; i++)
 		workers_data[i] = pww_start_worker();
@@ -162,7 +174,7 @@ int main(int argc, char **argv)
 		unsigned long int time_sum = 0;
 
 		// cycle to repeat spawn to get average spawn time
-		for (unsigned int ctry = 0; ctry <= tries; ctry++)
+		for (unsigned int ctry = 1; ctry <= tries; ctry++)
 		{
 			// start dummy IO workers
 			for (unsigned int i = 0; i < dummy_io_workers; i++)
@@ -229,6 +241,9 @@ int main(int argc, char **argv)
 		fclose(dummy_io_workers_opdata[i].file);
 		mm_free_char(dummy_io_workers_opdata[i].buffer);
 	}
+
+	// stop 0mq server
+	zmq_term(zmq_context);
 
 	exit(EX_OK);
 }

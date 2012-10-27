@@ -13,11 +13,12 @@ Compiling
 * pthreads library (-lpthread)
 * math library (-lm)
 * [pww library](https://github.com/pfactum/libpww) (-lpww)
+* 0MQ library (-lzmq)
 * gnuplot (optional for charts plotting)
 
 ### Compilation
 
-Enter kernelat directory and type `make`.
+Enter kernelat directory and type `make`. Then copy binaries from **kernelat-child** and **kernelat-spawner** directory to **kernelat-tester** directory.
 
 Benchmarking
 ------------
@@ -28,7 +29,7 @@ Disable everything: X, daemons, networking etc. Leave shell only.
 
 ### Setting benchmark options
 
-Enter **kernelat-spawner** directory and open **kernelat.sh** file for editing. Find `./kernelat-spawner blah-blah` row and change the following:
+Enter **kernelat-tester** directory and open **kernelat-tester.sh** file for editing. Find `./kernelat-spawner blah-blah` row and change the following:
 
 * -f — starting threads count.
 * -o — ending threads count.
@@ -40,11 +41,11 @@ Enter **kernelat-spawner** directory and open **kernelat.sh** file for editing. 
 
 ### Benchmarking
 
-Enter **kernelat-spawner** directory and run `./kernelat.sh`.
+Enter **kernelat-tester** directory and run `./kernelat-tester.sh`.
 
 ### Using results
 
-**kernelat.sh** script produces **plot.out** file that may be plotted directly using `gnuplot -persist plot.out`. Also you may use **your-kernel-version.out** file to create own charts.
+**kernelat-tester.sh** script produces **plot.out** file that may be plotted directly using `gnuplot -persist plot.out`. Also you may use **your-kernel-version.out** file to create own charts.
 
 Distribution and Contribution
 -----------------------------

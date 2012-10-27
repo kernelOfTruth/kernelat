@@ -22,35 +22,95 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <zmq.h>
 
 int main(int argc, char **argv)
 {
-	struct timeval time_inside, time_outside;
+	struct timeval time_inside;
 	gettimeofday(&time_inside, NULL);
-	memset(&time_outside, 0, sizeof(struct timeval));
 
-	// parses command line arguments to get time before spawn began
+	char *tmpfile;
 	int opt = 0;
-	while (-1 != (opt = getopt(argc, argv, "s:u:")))
+	while (-1 != (opt = getopt(argc, argv, "t:")))
 	{
 		switch (opt)
 		{
-			case 's':
-				time_outside.tv_sec = atoi(optarg);
-				break;
-			case 'u':
-				time_outside.tv_usec = atoi(optarg);
+			case 't':
+				tmpfile = optarg;
 				break;
 		}
 	}
 
-	// calculates spawn time
-	unsigned long int usecs_outside = time_outside.tv_sec * 1000000 + time_outside.tv_usec;
-	unsigned long int usecs_inside = time_inside.tv_sec * 1000000 + time_inside.tv_usec;
-	unsigned long int spawn_time = usecs_inside - usecs_outside;
+	void *zmq_context = zmq_init(1);
+	if (zmq_context == NULL)
+	{
+		fprintf(stderr, "Unable to initialize 0MZ context\n");
+		exit(EX_SOFTWARE);
+	}
+	void *zmq_sock = zmq_socket(zmq_context, ZMQ_REQ);
+	if (zmq_sock == NULL)
+	{
+		fprintf(stderr, "Unable to create 0MZ socket\n");
+		exit(EX_SOFTWARE);
+	}
+	int rc = zmq_connect(zmq_sock, tmpfile);
+	if (rc != 0)
+	{
+		fprintf(stderr, "Unable to connect to 0MZ socket\n");
+		exit(EX_SOFTWARE);
+	}
 
-	// outputs spawn time (μsecs) to stdout
-	fprintf(stdout, "%ld\n", spawn_time);
+	zmq_msg_t msg;
+	zmq_msg_init_size(&msg, sizeof(struct timeval));
+	memcpy(zmq_msg_data(&msg), &time_inside, sizeof(struct timeval));
+	rc = zmq_send(zmq_sock, &msg, 0);
+	if (rc != 0)
+	{
+		fprintf(stderr, "Unable to send message\n");
+		switch (errno)
+		{
+			case EAGAIN:
+				fprintf(stderr, "EAGAIN\n");
+				break;
+			case ENOTSUP:
+				fprintf(stderr, "ENOTSUP\n");
+				break;
+			case EFSM:
+				fprintf(stderr, "EFSM\n");
+				break;
+			case ETERM:
+				fprintf(stderr, "ETERM\n");
+				break;
+			case ENOTSOCK:
+				fprintf(stderr, "ENOTSOCK\n");
+				break;
+			case EINTR:
+				fprintf(stderr, "EINTR\n");
+				break;
+			case EFAULT:
+				fprintf(stderr, "EFAULT\n");
+				break;
+		}
+		exit(EX_SOFTWARE);
+	}
+	rc = zmq_msg_close(&msg);
+	if (rc != 0)
+	{
+		fprintf(stderr, "Unable to close message\n");
+		exit(EX_SOFTWARE);
+	}
+	rc = zmq_close(zmq_sock);
+	if (rc != 0)
+	{
+		fprintf(stderr, "Unable to close socket\n");
+		exit(EX_SOFTWARE);
+	}
+	rc = zmq_term(zmq_context);
+	if (rc != 0)
+	{
+		fprintf(stderr, "Unable to close context\n");
+		exit(EX_SOFTWARE);
+	}
 
 	return EX_OK;
 }
