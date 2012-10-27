@@ -13,4 +13,5 @@ local-install:
 clean:
 	$(MAKE) -C kernelat-spawner clean
 	$(MAKE) -C kernelat-child clean
+	$(MAKE) -C kernelat-tester clean
 
