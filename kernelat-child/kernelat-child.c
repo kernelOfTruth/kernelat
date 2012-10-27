@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	struct timeval time_inside;
 	gettimeofday(&time_inside, NULL);
 
-	char *tmpfile;
+	char *tmpfile = NULL;
 	int opt = 0;
 	while (-1 != (opt = getopt(argc, argv, "t:")))
 	{
