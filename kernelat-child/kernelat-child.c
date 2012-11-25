@@ -63,8 +63,8 @@ int main(int argc, char **argv)
 	zmq_msg_t msg;
 	zmq_msg_init_size(&msg, sizeof(struct timeval));
 	memcpy(zmq_msg_data(&msg), &time_inside, sizeof(struct timeval));
-	rc = zmq_send(zmq_sock, &msg, 0);
-	if (rc != 0)
+	rc = zmq_msg_send(&msg, zmq_sock, 0);
+	if (rc == -1)
 	{
 		fprintf(stderr, "Unable to send message\n");
 		switch (errno)

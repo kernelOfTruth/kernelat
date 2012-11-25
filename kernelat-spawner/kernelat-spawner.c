@@ -56,7 +56,7 @@ static void spawner_worker(void *data)
 
 	zmq_msg_t msg;
 	zmq_msg_init(&msg);
-	zmq_recv(zmq_sock, &msg, 0);
+	zmq_msg_recv(&msg, zmq_sock, 0);
 	struct timeval postspawn_time;
 	memset(&postspawn_time, 0, sizeof(struct timeval));
 	memcpy(&postspawn_time, zmq_msg_data(&msg), zmq_msg_size(&msg));
