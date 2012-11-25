@@ -12,7 +12,7 @@ Compiling
 * make
 * pthreads library (-lpthread)
 * [pww library](https://github.com/pfactum/libpww) (-lpww)
-* 0MQ library (-lzmq)
+* 0MQ library (-lzmq) v3.2.2
 * gnuplot (optional for charts plotting)
 
 ### Compilation
