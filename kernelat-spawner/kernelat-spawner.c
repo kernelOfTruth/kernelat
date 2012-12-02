@@ -44,10 +44,19 @@ static void spawner_worker(void *data)
 	spawner_worker_opdata_t *d = data;
 
 	void *zmq_sock = zmq_socket(zmq_context, ZMQ_REP);
+	if (zmq_sock == NULL)
+	{
+		fprintf(stderr, "Unable to create zmq socket\n");
+		exit(EX_SOFTWARE);
+	}
 	char *tmpfile = mm_alloc_char(50);
 	strcpy(tmpfile, "ipc://");
 	strcat(tmpfile, get_unique_filename());
-	zmq_bind(zmq_sock, tmpfile);
+	if (zmq_bind(zmq_sock, tmpfile) != 0)
+	{
+		fprintf(stderr, "Unable to bind to zmq socket\n");
+		exit(EX_SOFTWARE);
+	}
 
 	sprintf(command, "./kernelat-child -t %s", tmpfile);
 	gettimeofday(&prespawn_time, NULL);
@@ -55,13 +64,30 @@ static void spawner_worker(void *data)
 	mm_free_char(command);
 
 	zmq_msg_t msg;
-	zmq_msg_init(&msg);
-	zmq_msg_recv(&msg, zmq_sock, 0);
+	if (zmq_msg_init(&msg) != 0)
+	{
+		fprintf(stderr, "Unable to initialize zmq message\n");
+		exit(EX_SOFTWARE);
+	}
+	if (zmq_msg_recv(&msg, zmq_sock, 0) == -1)
+	{
+		fprintf(stderr, "Unable to receive zmq message\n");
+		exit(EX_SOFTWARE);
+	}
+
 	struct timeval postspawn_time;
 	memset(&postspawn_time, 0, sizeof(struct timeval));
 	memcpy(&postspawn_time, zmq_msg_data(&msg), zmq_msg_size(&msg));
-	zmq_msg_close(&msg);
-	zmq_close(zmq_sock);
+	if (zmq_msg_close(&msg) != 0)
+	{
+		fprintf(stderr, "Unable to close zmq message\n");
+		exit(EX_SOFTWARE);
+	}
+	if (zmq_close(zmq_sock) != 0)
+	{
+		fprintf(stderr, "Unable to close zmq socket\n");
+		exit(EX_SOFTWARE);
+	}
 
 	unsigned long int spawn_time = (postspawn_time.tv_sec * 1000000 + postspawn_time.tv_usec) - (prespawn_time.tv_sec * 1000000 + prespawn_time.tv_usec);
 	d->spawn_time = spawn_time;
@@ -138,6 +164,11 @@ int main(int argc, char **argv)
 
 	// start zmq server
 	zmq_context = zmq_init(1);
+	if (zmq_context == NULL)
+	{
+		fprintf(stderr, "Unable to initialize zmq context\n");
+		exit(EX_SOFTWARE);
+	}
 	
 	// prefork spawner workers
 	for (unsigned int i = 0; i < to_threads; i++)
@@ -240,7 +271,11 @@ int main(int argc, char **argv)
 	}
 
 	// stop zmq server
-	zmq_term(zmq_context);
+	if (zmq_term(zmq_context) != 0)
+	{
+		fprintf(stderr, "Unable to terminate zmq context\n");
+		exit(EX_SOFTWARE);
+	}
 
 	exit(EX_OK);
 }
