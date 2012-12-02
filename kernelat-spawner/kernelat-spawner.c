@@ -139,7 +139,6 @@ int main(int argc, char **argv)
 	// start zmq server
 	zmq_context = zmq_init(1);
 	
-
 	// prefork spawner workers
 	for (unsigned int i = 0; i < to_threads; i++)
 		workers_data[i] = pww_start_worker();
