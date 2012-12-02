@@ -44,19 +44,19 @@ int main(int argc, char **argv)
 	void *zmq_context = zmq_init(1);
 	if (zmq_context == NULL)
 	{
-		fprintf(stderr, "Unable to initialize 0MZ context\n");
+		fprintf(stderr, "Unable to initialize zmq context\n");
 		exit(EX_SOFTWARE);
 	}
 	void *zmq_sock = zmq_socket(zmq_context, ZMQ_REQ);
 	if (zmq_sock == NULL)
 	{
-		fprintf(stderr, "Unable to create 0MZ socket\n");
+		fprintf(stderr, "Unable to create zmq socket\n");
 		exit(EX_SOFTWARE);
 	}
 	int rc = zmq_connect(zmq_sock, tmpfile);
 	if (rc != 0)
 	{
-		fprintf(stderr, "Unable to connect to 0MZ socket\n");
+		fprintf(stderr, "Unable to connect to zmq socket\n");
 		exit(EX_SOFTWARE);
 	}
 
