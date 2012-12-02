@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 	rc = zmq_msg_send(&msg, zmq_sock, 0);
 	if (rc == -1)
 	{
-		fprintf(stderr, "Unable to send message\n");
+		fprintf(stderr, "Unable to send message: ");
 		switch (errno)
 		{
 			case EAGAIN:
@@ -89,6 +89,9 @@ int main(int argc, char **argv)
 				break;
 			case EFAULT:
 				fprintf(stderr, "EFAULT\n");
+				break;
+			default:
+				fprintf(stderr, "EUNKNOWN\n");
 				break;
 		}
 		exit(EX_SOFTWARE);
