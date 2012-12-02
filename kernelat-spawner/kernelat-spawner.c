@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	worker_data_t *real_io_workers_data[real_io_workers];
 	io_worker_opdata_t real_io_workers_opdata[real_io_workers];
 
-	// start 0mq server
+	// start zmq server
 	zmq_context = zmq_init(1);
 	
 
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
 		mm_free_char(dummy_io_workers_opdata[i].buffer);
 	}
 
-	// stop 0mq server
+	// stop zmq server
 	zmq_term(zmq_context);
 
 	exit(EX_OK);
