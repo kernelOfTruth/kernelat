@@ -41,6 +41,12 @@ int main(int argc, char **argv)
 		}
 	}
 
+	if (tmpfile == NULL)
+	{
+		fprintf(stderr, "You need to specify communication socket\n");
+		exit(EX_SOFTWARE);
+	}
+
 	void *zmq_context = zmq_init(1);
 	if (zmq_context == NULL)
 	{
