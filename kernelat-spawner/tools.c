@@ -73,3 +73,13 @@ char *get_unique_filename(void)
 	return filename;
 }
 
+// gets file size
+long fsize(FILE *file)
+{
+	long current_pos = ftell(file);
+	fseek(file, 0, SEEK_END);
+	long res = ftell(file);
+	fseek(file, 0, current_pos);
+	return res;
+}
+

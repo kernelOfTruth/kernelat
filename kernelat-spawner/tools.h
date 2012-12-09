@@ -22,6 +22,7 @@
 void signal_handler(int sig);
 void gen_random(char *s, const int len);
 char *get_unique_filename(void);
+long fsize(FILE *file);
 
 #endif
 

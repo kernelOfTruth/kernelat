@@ -95,16 +95,6 @@ static void spawner_worker(void *data)
 	return;
 }
 
-// gets file size
-long fsize(FILE *file)
-{
-	long current_pos = ftell(file);
-	fseek(file, 0, SEEK_END);
-	long res = ftell(file);
-	fseek(file, 0, current_pos);
-	return res;
-}
-
 // copies from /dev/zero to some file
 static void io_worker(void *data)
 {
