@@ -17,7 +17,7 @@ Compiling
 
 ### Compilation
 
-Enter kernelat directory and type `make`. Then type `make local-install` to install binaries in **kernelat-tester** directory.
+Enter **kernelat** directory and type `make`. Then type `make local-install` to install binaries in **kernelat-tester** directory.
 
 Benchmarking
 ------------
