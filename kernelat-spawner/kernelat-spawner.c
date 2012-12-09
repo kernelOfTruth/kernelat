@@ -95,6 +95,15 @@ static void spawner_worker(void *data)
 	return;
 }
 
+long fsize(FILE *file)
+{
+	long current_pos = ftell(file);
+	fseek(file, 0, SEEK_END);
+	long res = ftell(file);
+	fseek(file, 0, current_pos);
+	return res;
+}
+
 // copies from /dev/zero to some file
 static void io_worker(void *data)
 {
@@ -111,6 +120,12 @@ static void io_worker(void *data)
 		{
 			fread(d->buffer, block_size, 1, d->zero);
 			fwrite(d->buffer, block_size, 1, d->file);
+			fflush(d->file);
+			if (fsize(d->file) >= KA_MAX_TMP_SIZE)
+			{
+				rewind(d->file);
+				ftruncate(fileno(d->file), 0);
+			}
 		}
 	}
 
@@ -178,7 +193,7 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < dummy_io_workers; i++)
 	{
 		dummy_io_workers_opdata[i].zero = fopen("/dev/zero", "r");
-		dummy_io_workers_opdata[i].file = fopen("/dev/null", "w");
+		dummy_io_workers_opdata[i].file = fopen("/dev/null", "wb");
 		dummy_io_workers_opdata[i].buffer = mm_alloc_char(block_size);
 		dummy_io_workers_opdata[i].exit = 0;
 		pthread_mutex_init(&dummy_io_workers_opdata[i].mutex, NULL);
@@ -190,12 +205,21 @@ int main(int argc, char **argv)
 	{
 		real_io_workers_opdata[i].zero = fopen("/dev/zero", "r");
 		real_io_workers_opdata[i].filename = get_unique_filename();
-		real_io_workers_opdata[i].file = fopen(real_io_workers_opdata[i].filename, "w");
+		real_io_workers_opdata[i].file = fopen(real_io_workers_opdata[i].filename, "wb");
 		real_io_workers_opdata[i].buffer = mm_alloc_char(block_size);
 		real_io_workers_opdata[i].exit = 0;
 		pthread_mutex_init(&real_io_workers_opdata[i].mutex, NULL);
 		real_io_workers_data[i] = pww_start_worker();
 	}
+
+	// start dummy IO workers
+	for (unsigned int i = 0; i < dummy_io_workers; i++)
+		pww_submit_task(dummy_io_workers_data[i], &dummy_io_workers_opdata[i], io_worker);
+
+	// start real IO workers
+	for (unsigned int i = 0; i < real_io_workers; i++)
+		pww_submit_task(real_io_workers_data[i], &real_io_workers_opdata[i], io_worker);
+
 
 	for (unsigned int current_threads = from_threads; current_threads <= to_threads; current_threads++)
 	{
@@ -204,14 +228,7 @@ int main(int argc, char **argv)
 		// cycle to repeat spawn to get average spawn time
 		for (unsigned int ctry = 1; ctry <= tries; ctry++)
 		{
-			// start dummy IO workers
-			for (unsigned int i = 0; i < dummy_io_workers; i++)
-				pww_submit_task(dummy_io_workers_data[i], &dummy_io_workers_opdata[i], io_worker);
-
-			// start real IO workers
-			for (unsigned int i = 0; i < real_io_workers; i++)
-				pww_submit_task(real_io_workers_data[i], &real_io_workers_opdata[i], io_worker);
-
+			
 			// start spawner workers
 			for (unsigned int i = 0; i < current_threads; i++)
 				pww_submit_task(workers_data[i], &workers_opdata[i], spawner_worker);
@@ -223,29 +240,30 @@ int main(int argc, char **argv)
 				time_sum += workers_opdata[i].spawn_time;
 			}
 
-			// join real IO workers
-			for (unsigned int i = 0; i < real_io_workers; i++)
-			{
-				pthread_mutex_lock(&real_io_workers_opdata[i].mutex);
-				real_io_workers_opdata[i].exit = 1;
-				pthread_mutex_unlock(&real_io_workers_opdata[i].mutex);
-				pww_join_task(real_io_workers_data[i]);
-				rewind(real_io_workers_opdata[i].file);
-			}
-
-			// join dummy IO workers
-			for (unsigned int i = 0; i < dummy_io_workers; i++)
-			{
-				pthread_mutex_lock(&dummy_io_workers_opdata[i].mutex);
-				dummy_io_workers_opdata[i].exit = 1;
-				pthread_mutex_unlock(&dummy_io_workers_opdata[i].mutex);
-				pww_join_task(dummy_io_workers_data[i]);
-			}
 		}
 
 		fprintf(stdout, "%u\t%1.3lf\n", current_threads, (double) time_sum / (tries * current_threads * usecs_divider));
 		fprintf(stderr, "Completed: %1.3lf%%\n", 100 * (double) (current_threads - from_threads + 1) / (to_threads - from_threads + 1));
 	}
+
+	// join real IO workers
+	for (unsigned int i = 0; i < real_io_workers; i++)
+	{
+		pthread_mutex_lock(&real_io_workers_opdata[i].mutex);
+		real_io_workers_opdata[i].exit = 1;
+		pthread_mutex_unlock(&real_io_workers_opdata[i].mutex);
+		pww_join_task(real_io_workers_data[i]);
+	}
+
+	// join dummy IO workers
+	for (unsigned int i = 0; i < dummy_io_workers; i++)
+	{
+		pthread_mutex_lock(&dummy_io_workers_opdata[i].mutex);
+		dummy_io_workers_opdata[i].exit = 1;
+		pthread_mutex_unlock(&dummy_io_workers_opdata[i].mutex);
+		pww_join_task(dummy_io_workers_data[i]);
+	}
+
 
 	for (unsigned int i = 0; i < to_threads; i++)
 		pww_exit_task(workers_data[i]);
