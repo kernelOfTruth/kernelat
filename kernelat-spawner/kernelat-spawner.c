@@ -95,6 +95,7 @@ static void spawner_worker(void *data)
 	return;
 }
 
+// gets file size
 long fsize(FILE *file)
 {
 	long current_pos = ftell(file);
