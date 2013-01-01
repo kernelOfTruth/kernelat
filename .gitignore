@@ -1,7 +1,5 @@
 tests
-*.o
+build
 *.out
-kernelat-child/kernelat-child
-kernelat-spawner/kernelat-spawner
 kernelat-tester/kernelat-child
 kernelat-tester/kernelat-spawner

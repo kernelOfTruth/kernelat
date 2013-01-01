@@ -9,6 +9,7 @@ Compiling
 ### Prerequisites
 
 * gcc
+* cmake
 * make
 * pthreads library (-lpthread)
 * [pww library](https://github.com/pfactum/libpww) (-lpww)
@@ -17,7 +18,7 @@ Compiling
 
 ### Compilation
 
-Enter **kernelat** directory and type `make`. Then type `make local-install` to install binaries in **kernelat-tester** directory.
+Create **build** directory, enter it and type `cmake ..`. Then type `make` to build binaries. After that enter copy **kernelat-spawner** and **kernelat-child** into **kernelat-tester** directory.
 
 Benchmarking
 ------------
