@@ -69,7 +69,11 @@ static void spawner_worker(void *data)
 		fprintf(stderr, "Unable to initialize zmq message\n");
 		exit(EX_SOFTWARE);
 	}
+#if ZMQ_VERSION < ZMQ_MAKE_VERSION(3, 0, 0)
+	if (zmq_recv(zmq_sock, &msg, 0) == -1)
+#else
 	if (zmq_msg_recv(&msg, zmq_sock, 0) == -1)
+#endif
 	{
 		fprintf(stderr, "Unable to receive zmq message\n");
 		exit(EX_SOFTWARE);
