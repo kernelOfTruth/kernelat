@@ -18,7 +18,7 @@ Compiling
 
 ### Compilation
 
-Create **build** directory, enter it and type `cmake ..`. Then type `make` to build binaries. After that enter copy **kernelat-spawner** and **kernelat-child** into **kernelat-tester** directory.
+Create **build** directory, enter it and type `cmake ..`. Then type `make` to build binaries. After that copy **kernelat-spawner** and **kernelat-child** into **kernelat-tester** directory.
 
 Benchmarking
 ------------
