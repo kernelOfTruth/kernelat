@@ -47,6 +47,13 @@ Enter **kernelat-tester** directory and run `./kernelat-tester.sh`.
 
 **kernelat-tester.sh** script produces **plot.out** file that may be plotted directly using `gnuplot -persist plot.out`. Also you may use **your-kernel-version.out** file to create own charts.
 
+Special thanks
+--------------
+
+* To Farcaller for help in debugging.
+* To Ivan Titov for testing.
+* To Skolot for source code review.
+
 Distribution and Contribution
 -----------------------------
 
