@@ -42,12 +42,12 @@ void gen_random(char *s, const int len)
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		"abcdefghijklmnopqrstuvwxyz";
 
-	for (int i = 0; i < len; ++i)
+	for (int i = 0; i < len - 1; ++i)
 	{
 		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
 	}
 
-	s[len] = 0;
+	s[len - 1] = 0;
 }
 
 char *get_unique_filename(void)
