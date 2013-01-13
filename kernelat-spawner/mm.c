@@ -39,9 +39,9 @@ char *mm_alloc_char(int size)
 	return data;
 }
 
-void mm_free_char(char *data)
+void mm_free_char(char **data)
 {
-	free(data);
-	data = NULL;
+	free(*data);
+	*data = NULL;
 }
 

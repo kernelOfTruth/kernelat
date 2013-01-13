@@ -65,7 +65,7 @@ char *get_unique_filename(void)
 			break;
 		else
 		{
-			mm_free_char(filename);
+			mm_free_char(&filename);
 			filename = mm_alloc_char(44);
 		}
 		

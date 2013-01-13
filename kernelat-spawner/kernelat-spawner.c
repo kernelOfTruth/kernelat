@@ -61,7 +61,7 @@ static void spawner_worker(void *data)
 	sprintf(command, "./kernelat-child -t %s", tmpfile);
 	gettimeofday(&prespawn_time, NULL);
 	system(command);
-	mm_free_char(command);
+	mm_free_char(&command);
 
 	zmq_msg_t msg;
 	if (zmq_msg_init(&msg) != 0)
@@ -269,9 +269,9 @@ int main(int argc, char **argv)
 		pthread_mutex_destroy(&real_io_workers_opdata[i].mutex);
 		fclose(real_io_workers_opdata[i].zero);
 		fclose(real_io_workers_opdata[i].file);
-		mm_free_char(real_io_workers_opdata[i].buffer);
+		mm_free_char(&real_io_workers_opdata[i].buffer);
 		remove(real_io_workers_opdata[i].filename);
-		mm_free_char(real_io_workers_opdata[i].filename);
+		mm_free_char(&real_io_workers_opdata[i].filename);
 	}
 
 	for (unsigned int i = 0; i < dummy_io_workers; i++)
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
 		pthread_mutex_destroy(&dummy_io_workers_opdata[i].mutex);
 		fclose(dummy_io_workers_opdata[i].zero);
 		fclose(dummy_io_workers_opdata[i].file);
-		mm_free_char(dummy_io_workers_opdata[i].buffer);
+		mm_free_char(&dummy_io_workers_opdata[i].buffer);
 	}
 
 	// stop zmq server
