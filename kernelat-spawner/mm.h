@@ -19,8 +19,6 @@
 #ifndef MM_H
 #define MM_H
 
-#include "ka_types.h"
-
 char *mm_alloc_char(int size);
 void mm_free_char(char **data);
 
