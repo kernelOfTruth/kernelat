@@ -17,5 +17,5 @@
 */
 
 #define CHILD_COMMAND_LENGTH 256
-#define KA_MAX_TMP_SIZE 64 * 1024 * 1024
+#define KA_MAX_TMP_SIZE (64 * 1024 * 1024)
 
