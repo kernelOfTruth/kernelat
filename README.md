@@ -57,4 +57,4 @@ Special thanks
 Distribution and Contribution
 -----------------------------
 
-kernelat is provided under terms and conditions of GPLv3+. See file "COPYING" for details. Mail any suggestions, bugreports and comments to me: pfactum@gmail.com.
+kernelat is provided under terms and conditions of GPLv3+. See file "COPYING" for details. Mail any suggestions, bugreports and comments to me: oleksandr@natalenko.name.

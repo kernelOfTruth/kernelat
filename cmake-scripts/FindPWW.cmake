@@ -7,7 +7,7 @@
 #  PWW_DEFINITIONS - Compiler switches required for using PWW
 #
 #  Copyright (c) 2011 Lee Hambley <lee.hambley@gmail.com>
-#  Modified by Oleksandr Natalenko aka post-factum <pfactum@gmail.com>
+#  Modified by Oleksandr Natalenko aka post-factum <oleksandr@natalenko.name>
 #
 #  Redistribution and use is allowed according to the terms of the New
 #  BSD license.

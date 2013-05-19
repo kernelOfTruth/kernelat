@@ -1,6 +1,6 @@
 /*
     kernelat-child — small tool to measure userspace responsiveness, spawned child
-    Copyright © 2012 Oleksandr Natalenko aka post-factum <pfactum@gmail.com>
+    Copyright © 2012–2013 Oleksandr Natalenko aka post-factum <oleksandr@natalenko.name>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
